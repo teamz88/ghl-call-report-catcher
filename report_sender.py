@@ -4,11 +4,22 @@ import json
 import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 class CallReportSender:
     def __init__(self):
-        self.reports_folder = "reports"
-        self.webhook_url = "https://n8n.omadligrouphq.com/webhook/call-reports-sender"
+        self.reports_folder = os.getenv('REPORTS_FOLDER', 'reports')
+        self.webhook_url = os.getenv('N8N_WEBHOOK_URL')
+        
+        # Validate webhook URL
+        if not self.webhook_url:
+            raise ValueError("❌ N8N_WEBHOOK_URL must be set in environment variables")
+        
+        print(f"📁 Reports folder: {self.reports_folder}")
+        print(f"🔗 Webhook URL: {self.webhook_url}")
     
     def get_latest_csv_file(self) -> Optional[str]:
         """Find the latest CSV file in the reports folder"""

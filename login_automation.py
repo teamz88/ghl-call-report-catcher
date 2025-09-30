@@ -1,21 +1,37 @@
 import asyncio
 import time
+import os
+from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 from app import get_latest_otp
 from report_sender import CallReportSender
 
+# Load environment variables
+load_dotenv()
+
 class TidyYourSalesLogin:
     def __init__(self):
-        self.email = "info@omadligroup.com"
-        self.password = "********"
-        self.login_url = "https://app.tidyyoursales.com/"
-        self.target_url = "https://app.tidyyoursales.com/v2/location/<location_id>/reporting/call"
+        # Load credentials from environment variables
+        self.email = os.getenv('TIDYYOURSALES_EMAIL')
+        self.password = os.getenv('TIDYYOURSALES_PASSWORD')
+        self.login_url = os.getenv('TIDYYOURSALES_LOGIN_URL', 'https://app.tidyyoursales.com/')
+        self.target_url = os.getenv('TIDYYOURSALES_TARGET_URL')
+        self.headless = os.getenv('BROWSER_HEADLESS', 'false').lower() == 'true'
+        
+        # Validate required credentials
+        if not self.email or not self.password:
+            raise ValueError("❌ TIDYYOURSALES_EMAIL and TIDYYOURSALES_PASSWORD must be set in environment variables")
+        
+        print(f"✅ Loaded credentials for: {self.email}")
+        print(f"🌐 Login URL: {self.login_url}")
+        print(f"🎯 Target URL: {self.target_url}")
+        print(f"👁️ Headless mode: {self.headless}")
         
     async def login_with_otp(self):
         """Automated login with OTP verification"""
         async with async_playwright() as p:
             # Launch browser
-            browser = await p.chromium.launch(headless=False)  # Set to True for headless mode
+            browser = await p.chromium.launch(headless=self.headless)  # Use environment variable
             context = await browser.new_context()
             page = await context.new_page()
             

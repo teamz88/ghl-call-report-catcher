@@ -7,20 +7,33 @@ import json
 import logging
 import requests
 import re
+import os
 from msal import ConfidentialClientApplication
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Hard-coded configuration
+# Configuration from environment variables
 CONFIG = {
-    "client_id": "b30804b0-********",
-    "client_secret": "l5U8Q~******",
-    "authority": "https://login.microsoftonline.com/*********tenant_id",
+    "client_id": os.getenv('CLIENT_ID'),
+    "client_secret": os.getenv('CLIENT_SECRET'),
+    "authority": f"https://login.microsoftonline.com/{os.getenv('TENANT_ID')}",
     "scope": ["https://graph.microsoft.com/.default"],
-    "username": "info@omadligroup.com"
+    "username": os.getenv('USER_EMAIL')
 }
+
+# Validate required environment variables
+required_vars = ['CLIENT_ID', 'CLIENT_SECRET', 'TENANT_ID', 'USER_EMAIL']
+missing_vars = [var for var in required_vars if not os.getenv(var)]
+if missing_vars:
+    logger.warning(f"⚠️ Missing environment variables: {', '.join(missing_vars)}. Using default values.")
+else:
+    logger.info("✅ All required environment variables loaded successfully")
 
 # Target email senders and subject
 TARGET_SENDERS = [
