@@ -41,24 +41,31 @@ if [ -z "$PYTHON_BIN" ]; then
   exit 1
 fi
 
-# Preflight: ensure Python deps are available; auto-install if missing
-echo "Preflight: checking Python dependencies" >> "$LOG_FILE"
-"$PYTHON_BIN" -c "import msal, requests, playwright, dotenv" >/dev/null 2>&1 || {
-  echo "Installing Python dependencies..." >> "$LOG_FILE"
-  "$PYTHON_BIN" -m pip install --user -r "$PROJECT_DIR/requirements.txt" >> "$LOG_FILE" 2>&1
-}
+# Use project-local virtual environment to avoid system package restrictions (PEP 668)
+VENV_DIR="$PROJECT_DIR/.venv"
+VENV_PY="$VENV_DIR/bin/python"
+PIP_BIN="$VENV_DIR/bin/pip"
 
-# Install Playwright browsers once (idempotent with marker file)
-if [ ! -f "$PROJECT_DIR/.playwright_installed" ]; then
-  echo "Installing Playwright browsers..." >> "$LOG_FILE"
-  "$PYTHON_BIN" -m playwright install >> "$LOG_FILE" 2>&1 && touch "$PROJECT_DIR/.playwright_installed"
+if [ ! -d "$VENV_DIR" ]; then
+  echo "Creating virtual environment..." >> "$LOG_FILE"
+  "$PYTHON_BIN" -m venv "$VENV_DIR" >> "$LOG_FILE" 2>&1
+fi
+
+echo "Ensuring Python dependencies in venv..." >> "$LOG_FILE"
+"$PIP_BIN" install --upgrade pip wheel setuptools >> "$LOG_FILE" 2>&1
+"$PIP_BIN" install -r "$PROJECT_DIR/requirements.txt" >> "$LOG_FILE" 2>&1
+
+# Install Playwright browsers once per venv
+if [ ! -f "$VENV_DIR/.playwright_installed" ]; then
+  echo "Installing Playwright browsers (venv)..." >> "$LOG_FILE"
+  "$VENV_PY" -m playwright install >> "$LOG_FILE" 2>&1 && touch "$VENV_DIR/.playwright_installed"
 fi
 
 cd "$PROJECT_DIR"
 
 echo "Starting login_automation at $(date)" >> "$LOG_FILE"
 set +e
-"$PYTHON_BIN" "$PROJECT_DIR/login_automation.py" >> "$LOG_FILE" 2>&1
+"$VENV_PY" "$PROJECT_DIR/login_automation.py" >> "$LOG_FILE" 2>&1
 EXIT_CODE=$?
 set -e
 

@@ -2,6 +2,7 @@ import os
 import csv
 import json
 import requests
+import hashlib
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
@@ -13,6 +14,8 @@ class CallReportSender:
     def __init__(self):
         self.reports_folder = os.getenv('REPORTS_FOLDER', 'reports')
         self.webhook_url = os.getenv('N8N_WEBHOOK_URL')
+        # Persistent dedup state file (project-local)
+        self.dedup_state_path = os.path.join(os.path.dirname(__file__), 'dedup_state.json')
         
         # Validate webhook URL
         if not self.webhook_url:
@@ -160,6 +163,35 @@ class CallReportSender:
             print(f"❌ Error sending to webhook: {str(e)}")
             return False
     
+    def _compute_record_id(self, record: Dict) -> str:
+        """Compute a stable unique ID for a record based on its normalized contents"""
+        canonical = '|'.join(f"{k.strip()}={str(v).strip()}" for k, v in sorted(record.items()))
+        return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
+
+    def _load_dedup_state(self) -> set:
+        """Load set of already-sent record IDs"""
+        try:
+            if os.path.exists(self.dedup_state_path):
+                with open(self.dedup_state_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if isinstance(data, dict) and isinstance(data.get('ids'), list):
+                    return set(data['ids'])
+                if isinstance(data, list):
+                    return set(data)
+            return set()
+        except Exception as e:
+            print(f"❌ Error loading dedup state: {str(e)}")
+            return set()
+
+    def _save_dedup_state(self, ids: set) -> None:
+        """Persist set of sent record IDs"""
+        try:
+            with open(self.dedup_state_path, 'w', encoding='utf-8') as f:
+                json.dump({'ids': list(ids)}, f, indent=2, ensure_ascii=False)
+            print(f"✅ Dedup state saved ({len(ids)} ids)")
+        except Exception as e:
+            print(f"❌ Error saving dedup state: {str(e)}")
+
     def process_and_send_reports(self) -> bool:
         """Main function to process CSV and send to webhook"""
         try:
@@ -180,11 +212,29 @@ class CallReportSender:
             if not latest_day_reports:
                 print("❌ No reports found for the latest day")
                 return False
+
+            # Step 3.5: Deduplicate against previously sent records
+            sent_ids = self._load_dedup_state()
+            new_reports: List[Dict] = []
+            new_ids: set = set()
+            for report in latest_day_reports:
+                rid = self._compute_record_id(report)
+                if rid not in sent_ids:
+                    new_reports.append(report)
+                    new_ids.add(rid)
+            print(f"🧹 Dedup: {len(new_reports)} new, {len(latest_day_reports) - len(new_reports)} duplicates skipped")
+
+            if not new_reports:
+                print("ℹ️ No new reports to send (all duplicates)")
+                return True
             
             # Step 4: Send to webhook
-            success = self.send_to_webhook(latest_day_reports)
+            success = self.send_to_webhook(new_reports)
             
             if success:
+                # Update dedup state only on successful send
+                sent_ids.update(new_ids)
+                self._save_dedup_state(sent_ids)
                 print("🎉 Call report processing completed successfully!")
             else:
                 print("❌ Call report processing failed!")
