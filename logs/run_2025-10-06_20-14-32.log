@@ -1,0 +1,62 @@
+Preflight: checking Python dependencies
+Starting login_automation at Mon Oct  6 20:14:32 +05 2025
+2025-10-06 20:14:32,326 - INFO - ✅ All required environment variables loaded successfully
+2025-10-06 20:15:17,966 - INFO - Authentication successful
+2025-10-06 20:15:17,967 - INFO - Getting last 20 emails...
+2025-10-06 20:15:19,800 - INFO - Retrieved 20 emails
+2025-10-06 20:15:19,800 - INFO - Found 3 security code emails after filtering
+✅ Loaded credentials for: info@omadligroup.com
+🌐 Login URL: https://app.tidyyoursales.com/
+🎯 Target URL: https://app.tidyyoursales.com/v2/location/wZfvILagnooxcUiLaxyk/reporting/call
+👁️ Headless mode: True
+🌐 Opening login page...
+📝 Filling login credentials...
+🔐 Submitting login form...
+⏳ Waiting for OTP verification page...
+✅ OTP verification page loaded
+📤 Clicking 'Send Security Code' button...
+✅ Security code sent
+⏰ Waiting 30 seconds for email to arrive...
+📧 Getting latest OTP from email...
+✅ Latest OTP code found: 513201
+📧 From: noreply@mg.tidyyourhomes.com
+📅 Received: 2025-10-06T15:14:57Z
+🔢 Using OTP: 513201
+⌨️ Entering OTP code...
+✅ OTP entered successfully
+⏰ Waiting 30 seconds for login processing...
+Traceback (most recent call last):
+  File "/Users/bro/PROJECTS/callreportcatcher/login_automation.py", line 301, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/bro/PROJECTS/callreportcatcher/login_automation.py", line 293, in main
+    success = await login_bot.login_with_otp()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bro/PROJECTS/callreportcatcher/login_automation.py", line 288, in login_with_otp
+    await browser.close()
+  File "/Users/bro/Library/Python/3.13/lib/python/site-packages/playwright/async_api/_generated.py", line 14234, in close
+    return mapping.from_maybe_impl(await self._impl_obj.close(reason=reason))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bro/Library/Python/3.13/lib/python/site-packages/playwright/_impl/_browser.py", line 241, in close
+    raise e
+  File "/Users/bro/Library/Python/3.13/lib/python/site-packages/playwright/_impl/_browser.py", line 238, in close
+    await self._channel.send("close", None, {"reason": reason})
+  File "/Users/bro/Library/Python/3.13/lib/python/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/bro/Library/Python/3.13/lib/python/site-packages/playwright/_impl/_connection.py", line 558, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+Exception: Browser.close: Connection closed while reading from the driver
+Finished with exit code 1 at Mon Oct  6 20:15:24 +05 2025

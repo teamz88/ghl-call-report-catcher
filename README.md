@@ -81,5 +81,26 @@ Microsoft Graph API (for email OTP retrieval):
 - Rotate passwords regularly
 - Use minimal required permissions
 
+## ▶️ Running and Scheduling
+
+Run once:
+```bash
+bash /Users/bro/PROJECTS/callreportcatcher/run_call_report.sh
+```
+
+Schedule with cron (examples):
+- Every hour:
+```cron
+0 * * * * /bin/bash /Users/bro/PROJECTS/callreportcatcher/run_call_report.sh
+```
+- Every 30 minutes:
+```cron
+*/30 * * * * /bin/bash /Users/bro/PROJECTS/callreportcatcher/run_call_report.sh
+```
+
+Notes:
+- The runner loads .env, auto-installs missing Python dependencies and Playwright browsers, writes logs to logs/, and prevents overlapping runs.
+- Set BROWSER_HEADLESS=true in .env for server environments.
+
 ---
 *For internal use only*
