@@ -1,0 +1,6 @@
+Starting login_automation at Mon Oct  6 20:02:04 +05 2025
+Traceback (most recent call last):
+  File "/Users/bro/PROJECTS/callreportcatcher/login_automation.py", line 4, in <module>
+    from dotenv import load_dotenv
+ModuleNotFoundError: No module named 'dotenv'
+Finished with exit code 0 at Mon Oct  6 20:02:06 +05 2025
